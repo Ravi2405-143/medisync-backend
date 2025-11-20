@@ -1,38 +1,42 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config();
-
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/medications', require('./routes/medications'));
+let medications = [];
 
-// Root route
-// Root route
+// Test route
 app.get('/', (req, res) => {
-  res.json({ 
-    message: 'MediSync Backend API is running!',
-    endpoints: {
-      auth: '/api/auth',
-      medications: '/api/medications'
-    }
-  });
+  res.json({ message: 'MediSync Backend API is running!' });
 });
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/medisync')
-  .then(() => console.log('✅ MongoDB connected successfully'))
-  .catch(err => console.log('❌ MongoDB connection error:', err));
+// Get all medications
+app.get('/api/medications', (req, res) => {
+  res.json(medications);
+});
 
-// Start Server
-const PORT = process.env.PORT || 5000;
+// Add new medication
+app.post('/api/medications', (req, res) => {
+  const medication = {
+    id: Date.now(),
+    name: req.body.name,
+    dosage: req.body.dosage,
+    frequency: req.body.frequency,
+    time: req.body.time
+  };
+  medications.push(medication);
+  res.json(medication);
+});
+
+// Delete medication
+app.delete('/api/medications/:id', (req, res) => {
+  medications = medications.filter(m => m.id !== parseInt(req.params.id));
+  res.json({ message: 'Medication deleted' });
+});
+
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 MediSync server running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+  console.log(`MediSync backend running on port ${PORT}`);
 });
